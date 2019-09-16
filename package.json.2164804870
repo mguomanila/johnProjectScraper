@@ -1,0 +1,15 @@
+{
+  "name": "johnp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ConvertPdfToCsvFromUploadedFile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^1.19.0"
+  }
+}

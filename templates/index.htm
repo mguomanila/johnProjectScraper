@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>tokens</title>
+  <script>
+  const copyClick = a => {
+    a.select()
+    document.execCommand('copy')
+  }
+  </script>
+</head>
+<body>
+  <div>
+    <p>Code to pass in console:</p>
+    <input onclick="copyClick(this)"
+        value="document.querySelector('iframe').contentWindow.document.body.querySelector('#g-recaptcha-response').value">
+    <label style="float:left">tokens :</label>
+  </div>
+  <p>Url need to be opened to every token again. (Token lives only 300s)</p>
+  <p>Open url in new tab:</p>
+  <input onclick="copyClick(this)"
+        value="https://ekrs.ms.gov.pl/web/wyszukiwarka-krs/strona-glowna/"
+        placeholder="Wyszukiwanie Księgi Wieczystej">
+   <label style="float:left">Wyszukiwanie Księgi Wieczystej :</label>
+   <p></p>
+  <form action="/in" method="GET">
+    <label for="token">Paste tokens here:</label>
+    <input type="text" name="token" id="token">
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
