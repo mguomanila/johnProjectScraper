@@ -31,6 +31,31 @@ function mkdirSync(dirPath){
     }
 }
 
+function waitForFileExists(fp,timeout=15000){
+    return new Promise( (resolve,reject) => {
+        const dir = path.dirname(fp)
+        const base = path.basename(fp)
+        const watcher = fs.watch(dir, (et,fn) => {
+            if(et==='rename' && fn===base){
+                clearTimeout(timer)
+                wather.close()
+                resolve()
+            }
+        })
+        const timer = setTimeout( e => {
+            watcher.close()
+            reject(new Error(' [checkFileExists] File does not exist, and was not created during the timeout delay.'))
+        }, timeout)
+        fs.access(fp, fs.constants.R_OK, e => {
+            if(!e){
+                clearTimeout(timer)
+                watcher.close()
+                resolve()
+            }
+        })
+    })
+}
+
 function insideBrowser(number,token,sameOrigin=true){
     const elements = new Map()
     const timeInterval = 1e3
@@ -103,7 +128,8 @@ function insideBrowser(number,token,sameOrigin=true){
     // download pdf
     // setTimeout( () => {
     //     const goto =document.querySelector('#podmiotyGrid a[href]')
-    //     window.scrollTo(0,goto.scrollHeight)
+    //     // window.scrollTo(0,goto.scrollHeight)
+    //     goto.scrollTo()
     //     goto.click()
     // },timeInterval*10)
 }
@@ -115,7 +141,8 @@ async function crawl(browser, page, token, captcha, depth=0){
         return
     } else {
         console.log(`loading: ${page.url}`)
-        const newPage = browser
+        const pages = await browser.pages()
+        const newPage = pages[pages.length-1]
         await newPage.goto(page.url, {waitUntil: 'networkidle2'})
         await newPage.evaluate(insideBrowser,numbers.pop(),token,captcha)
         // await newPage.waitForSelector('#szukaj')
@@ -126,6 +153,7 @@ async function crawl(browser, page, token, captcha, depth=0){
         // await newPage.waitForSelector('#pobierzWydrukPelny')
         // await newPage.click('#pobierzWydrukPelny')
         // await newPage.close()
+        return await newPage
     }
 }
 
@@ -162,35 +190,53 @@ async function events(browser){
     })
     let token = ''
     const root = {url: URL}
-    const pages = await browser.pages()
-    request.get({url:'http://localhost:6060/get'}, (e,r,b)=>{
-        token = JSON.parse(b)['token']
-        emitter.emit('foo', token)
-    })
-    emitter.on('foo', token => {
-        console.log('token', token)
-        crawl(pages[0], root, token).then( () => {
-            emitter.emit('goto_pdf')
-        }).catch( e => console.log('error foo', e))
-    })
-    emitter.on('goto_pdf', () => {
-        let page = pages[pages.length-1]
-        page._client.send('Page.setDownloadBehavior', {
-            behavior: 'allow',
-            downloadPath: './'
+    
+    await new Promise( resolve => {
+        request.get({url:'http://localhost:6060/get'}, (e,r,b) => {
+            token = JSON.parse(b)['token']
+            resolve()
         })
-        page.waitForSelector('#podmiotyGrid',{waitUntil: 'networkidle2'})
-        .then( e => {
-            page.evaluate( x => {
-                goto = document.querySelector('#podmiotyGrid a[href]')
-                window.scrollTo(0,goto.scrollHeight)
-                goto.click()
-            })
-        })
-        .catch( e => console.log('error in waitforselector',e) )
+        .on('error', e => console.log('request error', e))
     })
+    
+    let newPage
+    console.log('token', token)
+    try{
+        newPage = await crawl(browser, root, token)
+    } catch (e) {
+        console.log(e)
+        emitter.emit('finished', e)
+    }
+    // const pages = await browser.pages()
+    // const newPage = pages[pages.length-1]
+    await newPage.screenshot({path:'test.png'})
+    // try{
+    //     const goto = await newPage.$('#podmiotyGrid a[href]')
+    //     console.log(goto)
+    //     goto.click()
+    // } catch (e){
+    //     emitter.emit('finished',e)
+    // }
+    
+    
+    // emitter.on('goto_pdf', () => {
+    //     let page = pages[pages.length-1]
+    //     page._client.send('Page.setDownloadBehavior', {
+    //         behavior: 'allow',
+    //         downloadPath: './'
+    //     })
+    //     page.waitForSelector('#podmiotyGrid',{waitUntil: 'networkidle2'})
+    //     .then( e => {
+    //         page.evaluate( x => {
+    //             goto = document.querySelector('#podmiotyGrid a[href]')
+    //             window.scrollTo(0,goto.scrollHeight)
+    //             goto.click()
+    //         })
+    //     })
+    //     .catch( e => console.log('error in waitforselector',e) )
+    // })
     emitter.on('finished', e => {
-        console.log('finished')
+        console.log('finished', e)
         browser.close()
     })
 })()
