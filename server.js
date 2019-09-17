@@ -1,15 +1,11 @@
-const Seneca = require('seneca')
 const Express = require('express')
 const path = require('path')
 
 const app = Express()
-const seneca = Seneca()
 const tokens = []
-seneca.use('./test_plugin2')
-seneca.quiet()
 
 const port = 6060
-app.set('views', path.join(__dirname, 'template'))
+app.set('views', path.join(__dirname, 'templates'))
 app.engine('htm', require('ejs').renderFile)
 app.set('view engine', 'htm')
 
@@ -31,20 +27,3 @@ app.get('/get', (req,res) => {
 })
 
 app.listen(port, e => console.log(`listening on port ${port}`))
-
-seneca.act({role:'token',cmd:'push_token',token:tokens.pop()}, (e,r) => {
-        if(e){
-            console.log(e)
-            return
-        }
-        else {
-//             console.log(`listening @port ${port}`)
-            console.log(r)
-        }
-    })
-
-seneca.add({role:'token',cmd:'get_token'}, (m,r) => {
-    r(this.token)
-})
-    
-// seneca.listen({port:port,pin:{role:'token'}})

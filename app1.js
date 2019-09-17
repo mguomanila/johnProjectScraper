@@ -1,8 +1,8 @@
-const Seneca = require('seneca')
 const puppet = require('puppeteer')
 const express = require('express')
 const request = require('request')
 const fs = require('fs')
+const path = require('path')
 const {EventEmitter} = require('events')
 
 const app = express()
@@ -11,6 +11,7 @@ const emitter = new EventEmitter()
 
 const crawledPages = new Map()
 const URL = 'https://ekrs.ms.gov.pl/web/wyszukiwarka-krs/strona-glowna/'
+const DOWNLOAD_PATH = path.resolve(__dirname, 'downloads')
 
 function slugify(str){
     return str.replace(/[\/:]/g, '_')
@@ -72,8 +73,7 @@ function insideBrowser(number,token,sameOrigin=true){
             document.querySelector('iframe')
                 .contentWindow.document.body
                 .querySelector('#szukaj'))
-        // elements.get('send').click()
-        return elements.get('send')
+        elements.get('send').click()
     }, timeInterval*8)
     // remove the troubled script
     const captcha = document.createElement('iframe', {
@@ -101,7 +101,11 @@ function insideBrowser(number,token,sameOrigin=true){
     }, timeInterval*4 )
 
     // download pdf
-    
+    // setTimeout( () => {
+    //     const goto =document.querySelector('#podmiotyGrid a[href]')
+    //     window.scrollTo(0,goto.scrollHeight)
+    //     goto.click()
+    // },timeInterval*10)
 }
 
 async function crawl(browser, page, token, captcha, depth=0){
@@ -113,39 +117,20 @@ async function crawl(browser, page, token, captcha, depth=0){
         console.log(`loading: ${page.url}`)
         const newPage = browser
         await newPage.goto(page.url, {waitUntil: 'networkidle2'})
-        const elem = newPage.evaluate(insideBrowser,numbers.pop(),token,captcha)
-        await newPage.waitForSelector('#szukaj')
-        await newPage.click('#szukaj')
+        await newPage.evaluate(insideBrowser,numbers.pop(),token,captcha)
+        // await newPage.waitForSelector('#szukaj')
+        // await newPage.click('#szukaj')
         // elem.click()
-        await newPage.waitForSelector('#podmiotyGrid a[href]')
-        await newPage.click('#podmiotyGrid a[href]')
-        await newPage.waitForSelector('#pobierzWydrukPelny')
-        await newPage._client.send('Page.setDownloadBehavior', {
-            behavior: 'allow',
-            downloadPath: './'
-        })
-        await newPage.click('#pobierzWydrukPelny')
+        // await newPage.waitForSelector('#podmiotyGrid a[href]')
+        // await newPage.click('#podmiotyGrid a[href]')
+        // await newPage.waitForSelector('#pobierzWydrukPelny')
+        // await newPage.click('#pobierzWydrukPelny')
+        // await newPage.close()
     }
 }
 
-;(async () => {
-    let token = ''
-    const root = {url: URL}
-    const browser = await puppet.launch({
-        headless: false,
-        args: ['--enable-logging']
-    })
-    const pages = await browser.pages()
-    await request.get({url:'http://localhost:6060/get'}, (e,r,b)=>{
-        token = JSON.parse(b)['token']
-        emitter.emit('foo', token)
-    })
-    emitter.on('foo', token => {
-        console.log('token', token)
-        const page = crawl (pages[0], root, token)
-        // emitter.emit('pdf', page)
-    })
-    // emitter.on('pdf', page => {
+async function events(browser){
+        // emitter.on('pdf', page => {
     //     page.evaluate( () => {
     //         goto = document.querySelector('#podmiotyGrid a[href]')
     //         goto.click()
@@ -167,5 +152,45 @@ async function crawl(browser, page, token, captcha, depth=0){
         //     if(r._headers['content-disposition'] ===`attachment; filename=${filename}`)
         // })
     // })
-    //await browser.close()
+}
+
+(async () => {
+    const browser = await puppet.launch({
+        headless: false,
+        args: ['--enable-logging'],
+        dumpio: true
+    })
+    let token = ''
+    const root = {url: URL}
+    const pages = await browser.pages()
+    request.get({url:'http://localhost:6060/get'}, (e,r,b)=>{
+        token = JSON.parse(b)['token']
+        emitter.emit('foo', token)
+    })
+    emitter.on('foo', token => {
+        console.log('token', token)
+        crawl(pages[0], root, token).then( () => {
+            emitter.emit('goto_pdf')
+        }).catch( e => console.log('error foo', e))
+    })
+    emitter.on('goto_pdf', () => {
+        let page = pages[pages.length-1]
+        page._client.send('Page.setDownloadBehavior', {
+            behavior: 'allow',
+            downloadPath: './'
+        })
+        page.waitForSelector('#podmiotyGrid',{waitUntil: 'networkidle2'})
+        .then( e => {
+            page.evaluate( x => {
+                goto = document.querySelector('#podmiotyGrid a[href]')
+                window.scrollTo(0,goto.scrollHeight)
+                goto.click()
+            })
+        })
+        .catch( e => console.log('error in waitforselector',e) )
+    })
+    emitter.on('finished', e => {
+        console.log('finished')
+        browser.close()
+    })
 })()
