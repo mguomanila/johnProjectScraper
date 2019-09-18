@@ -4,7 +4,7 @@ const createCsvWriter = require('csv-writer').createObjectCsvWriter
 
 let pdfParser = new PDFParser(this,1)
 const csvWriter = createCsvWriter({
-    path: './sample.csv',
+    path: './csv/sample2.csv',
     header: [
         {id:'imiona', title: 'Imiona'},
         {id: 'nazwisko', title: 'Nazwisko'},
@@ -41,5 +41,5 @@ pdfParser.on('pdfParser_dataReady', pdfData => {
     csvWriter.writeRecords(records).then( e => {if(e) console.error(e); else console.log('csv save.')})
 })
 
-pdfParser.loadPDF('./odpis_pelny_66488_1568043354713.pdf')
-
+pdfParser.loadPDF(process.argv[2])
+console.log(process.argv[2])
