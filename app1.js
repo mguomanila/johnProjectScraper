@@ -126,12 +126,24 @@ function insideBrowser(number,token,sameOrigin=true){
     }, timeInterval*4 )
 
     // download pdf
-    // setTimeout( () => {
-    //     const goto =document.querySelector('#podmiotyGrid a[href]')
-    //     // window.scrollTo(0,goto.scrollHeight)
-    //     goto.scrollTo()
-    //     goto.click()
-    // },timeInterval*10)
+    setTimeout( () => {
+        const goto = document.querySelector('iframe')
+            .contentWindow.document.body
+            .querySelector('#podmiotyGrid a[href]')
+        // window.scrollTo(0,goto.scrollHeight)
+        goto.scrollIntoView()
+        goto.click()
+    },timeInterval*10)
+    setTimeout( () => {
+        const pdf = document.querySelector('iframe')
+            .contentWindow.document.body
+            .querySelector('#pobierzWydrukPelny')
+        // const pdf = document.querySelector('#pobierzWydrukPelny')
+        // window.scrollTo(0,document.body.scrollHeight)
+        pdf.target = ''
+        pdf.scrollIntoView()
+        pdf.click()
+    },timeInterval*13)
 }
 
 async function crawl(browser, page, token, captcha, depth=0){
@@ -141,8 +153,20 @@ async function crawl(browser, page, token, captcha, depth=0){
         return
     } else {
         console.log(`loading: ${page.url}`)
-        const pages = await browser.pages()
-        const newPage = pages[pages.length-1]
+        // const pages = await browser.pages()
+        // const newPage = pages[pages.length-1]
+        const newPage = await browser.newPage()
+        const client = await newPage.target().createCDPSession()
+        await client.send('Page.setDownloadBehavior', {
+            behavior: 'allow',
+            downloadPath: DOWNLOAD_PATH
+        })
+        // await newPage.setViewPort({
+        //     width: 1366,
+        //     height: 680,
+        //     deviceScaleFactor: 1,
+        // })
+
         await newPage.goto(page.url, {waitUntil: 'networkidle2'})
         await newPage.evaluate(insideBrowser,numbers.pop(),token,captcha)
         // await newPage.waitForSelector('#szukaj')
@@ -153,7 +177,6 @@ async function crawl(browser, page, token, captcha, depth=0){
         // await newPage.waitForSelector('#pobierzWydrukPelny')
         // await newPage.click('#pobierzWydrukPelny')
         // await newPage.close()
-        return await newPage
     }
 }
 
@@ -185,7 +208,7 @@ async function events(browser){
 (async () => {
     const browser = await puppet.launch({
         headless: false,
-        args: ['--enable-logging'],
+        args: ['--enable-logging', '--disable-gpu ', '--disable-software-rasterizer'],
         dumpio: true
     })
     let token = ''
@@ -199,17 +222,22 @@ async function events(browser){
         .on('error', e => console.log('request error', e))
     })
     
-    let newPage
+    // let newPage
     console.log('token', token)
     try{
-        newPage = await crawl(browser, root, token)
+        await crawl(browser, root, token)
     } catch (e) {
         console.log(e)
         emitter.emit('finished', e)
     }
+    // await newPage.evaluate( ()=> {
+    //     let body = document.body
+    //     body.scrollTo(body.scrollWidth,body.scrollHeight)
+    // })
     // const pages = await browser.pages()
     // const newPage = pages[pages.length-1]
-    await newPage.screenshot({path:'test.png'})
+    
+    // await newPage.screenshot({path:'test.png'})
     // try{
     //     const goto = await newPage.$('#podmiotyGrid a[href]')
     //     console.log(goto)
@@ -235,6 +263,7 @@ async function events(browser){
     //     })
     //     .catch( e => console.log('error in waitforselector',e) )
     // })
+    // await browser.close()
     emitter.on('finished', e => {
         console.log('finished', e)
         browser.close()
