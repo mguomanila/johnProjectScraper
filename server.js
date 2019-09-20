@@ -2,12 +2,13 @@ const Express = require('express')
 const path = require('path')
 
 const app = Express()
-const tokens = []
 
-const port = 6060
 app.set('views', path.join(__dirname, 'templates'))
 app.engine('htm', require('ejs').renderFile)
 app.set('view engine', 'htm')
+
+const tokens = []
+const port = 6060
 
 app.get('/', (req,res) => {
     res.render('index')
