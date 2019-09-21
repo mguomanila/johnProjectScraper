@@ -28,6 +28,34 @@
     <label for="token">Paste tokens here:</label>
     <input type="text" name="token" id="token">
     <button type="submit">Submit</button>
+    <button onclick="a()">Get Token</button>
   </form>
+  <script>
+  let url = "https://ekrs.ms.gov.pl/web/wyszukiwarka-krs/strona-glowna/"
+  let timeout = 1e3
+  let win
+  let token = ''
+  let captcha
+  async function a(){
+    win = window.open(url,'ekrs_main')
+    await new Promise( async (resolve) => {
+      await Promise.all([
+        setTimeout( () => {
+          // win = win.document.querySelector('iframe')
+          // .contentWindow.document.body
+          // .querySelector('#g-recaptcha-response')
+          //.value
+          // captcha = win.document.querySelector('#g-recaptcha-response')
+        },timeout*20),
+      ])
+      window.win = win
+      // debugger
+      resolve()
+    })
+    // document.getElementById('token').value=token
+    // document.querySelector('form').submit()
+    // win.close()
+  }
+  </script>
 </body>
 </html>
