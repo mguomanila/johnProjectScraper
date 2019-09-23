@@ -1,16 +1,14 @@
 require('dotenv-safe').config({sample:'.env'})
-const puppeteer = require('puppeteer')
-const express = require('express')
-const request = require('request')
 const fs = require('fs')
 const path = require('path')
-const {EventEmitter} = require('events') 
-const {parsePdf} = require('./pdf_parser')
-const {mkdirSync,waitForFileExists,browse1,browse2} = require('./utility')
+const express = require('express')
+const request = require('request')
+const puppeteer = require('puppeteer')
+const parsePdf = require('./pdf_parser1')
+const {mkdirSync,waitForFileExists,browse1,browse2,event,logger} = require('./utility')
 
 const app = express()
-const event = new EventEmitter()
-const {numbers,modifyFile:modifyNumbers} = require('./numbers1')
+const {numbers} = require('./numbers1')
 
 const OUT_DIR1 = process.env.OUT_DIR1
 const OUT_DIR2 = process.env.OUT_DIR2
@@ -20,6 +18,7 @@ const URL = process.env.URL
 const local_url = process.env.local_url
 const timeout = process.env.timeout
 
+mkdirSync([OUT_DIR1,OUT_DIR2])
   
 async function crawl1(browser, page){
     console.log(`Loading: ${page.url}`)
@@ -35,11 +34,10 @@ async function crawl1(browser, page){
     try{
         await newPage.evaluate(browse1, page)
     }catch(e){
-        console.log(e)
-        newPage.close()
+        logger.write2(e)
+    }finally{
+        await newPage.close()
     }
-    await newPage.close()
-    // event.emit('finished')
 }
 
 async function crawl2(browser, page){
@@ -56,34 +54,14 @@ async function crawl2(browser, page){
     try{
         await newPage.evaluate(browse2, page)
     }catch(e){
-        console.log(e)
-        newPage.close()
+        logger.write2(e)
+    }finally{
+        await newPage.close()
     }
-    await newPage.close()
-    // event.emit('finished')
 }
 
 (async() => {
 
-    event.on('finished', e => {
-        if(e) console.log('an error occured',e)
-        browser.close()
-    })
-    
-    event.on('numbers_change', n => {
-        modifyNumbers(n)
-    })
-    
-    event.on('timeout', ()=>{
-        clearInterval(interval_id)
-    })
-
-    event.on('clearInterval', ()=>{
-        clearInterval(intervalId)
-    })
-    
-    mkdirSync(OUT_DIR1) // create output dir if it doesn't exist
-    mkdirSync(OUT_DIR2)
     const browser = await puppeteer.launch({
         // headless: false,
         args: ['--enable-logging', '--disable-gpu ', '--disable-software-rasterizer', 
@@ -102,13 +80,12 @@ async function crawl2(browser, page){
         await Promise.all([
             root.token = token,
             root.number = n,
-            event.emit('numbers_change', numbers)
-            // modifyNumbers(numbers)
+            event.emit('numbers', numbers)
         ])
         try{
             await crawl1(browser, root)
         }catch(e){
-            console.log(e)
+            logger.write2(e)
             event.emit('clearInterval')
             event.emit('finished')
         }  
@@ -117,14 +94,12 @@ async function crawl2(browser, page){
         await Promise.all([
             root.token = token,
             root.number = n
-            // event.emit('numbers_change', numbers)
-            // modifyNumbers(numbers)
         ])
         try{
             await crawl2(browser, root)
         }catch(e){
-            console.log(e)
-            event.emit('clearInterval')
+            logger.write2(e)
+            event.emit('clearInterval', intervalId)
             event.emit('finished')
         }  
     })
@@ -134,7 +109,6 @@ async function crawl2(browser, page){
         request.get({url: local_url}, (e,r,b)=>{
             token = JSON.parse(b)['token']
             if(!!token && !count) {
-                // tokens.push(token)
                 number = numbers.pop()
                 event.emit('tokens1',token, number)
                 count++

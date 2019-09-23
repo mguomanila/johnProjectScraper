@@ -1,21 +1,31 @@
 const path = require('path')
 const fs = require('fs')
+const {modifyFile:modifyNumbers} = require('./numbers1')
+
 exports = module.exports = {}
 
 function mkdirSync(dirPath) {
-    try {
-      dirPath.split('/').reduce((parentPath, dirName) => {
-        const currentPath = parentPath + dirName;
-        if (!fs.existsSync(currentPath)) {
-          fs.mkdirSync(currentPath);
-        }
-        return currentPath + '/';
-      }, '');
-    } catch (err) {
-      if (err.code !== 'EEXIST') {
-        throw err;
-      }
+    function a(dirPath){
+        try {
+            dirPath.split('/').reduce((parentPath, dirName) => {
+              const currentPath = parentPath + dirName;
+              if (!fs.existsSync(currentPath)) {
+                fs.mkdirSync(currentPath);
+              }
+              return currentPath + '/';
+            }, '');
+          } catch (err) {
+            if (err.code !== 'EEXIST') {
+              throw err;
+            }
+          }
     }
+    if(typeof dirPath === 'object'){
+        dirPath.forEach( a )
+    } else {
+        a(dirPath)
+    }
+
 }
 
 /**
@@ -275,8 +285,45 @@ async function findPDFAndDownload2(page){
     })
 }
 
+function Event(){
+    const {EventEmitter} = require('events') 
+    const event = new EventEmitter()
+    event.on('finished', e => {
+        if(e) console.log('an error occured',e)
+        browser.close()
+    })
+    event.on('numbers', n => {
+        modifyNumbers(n)
+    })
+    event.on('clearInterval', id => {
+        clearInterval(id)
+    })
+    return event
+}
 
+function logging(){
+    const filepath = path.resolve(__dirname,'log.txt')
+    let logger
+    if(!fs.existsSync(filepath)){
+        fs.writeFileSync(filepath,'')
+    }
+    logger = fs.createWriteStream(filepath,{
+        flags: 'a+',
+        encoding: 'utf8',
+        fd: null,
+        mode: 0o666,
+        autoClose: true
+    })
+    logger.write2 = function(a){
+        logger.write(a+'\n')
+    }
+    return logger
+}
+
+// choose your utility
 exports.mkdirSync = mkdirSync
 exports.waitForFileExists = waitForFileExists
 exports.browse1 = findPDFAndDownload1
 exports.browse2 = findPDFAndDownload2
+exports.event = Event()
+exports.logger = logging()
