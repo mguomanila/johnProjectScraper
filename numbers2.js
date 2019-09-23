@@ -27,8 +27,8 @@ getFromFile(filename)
 //     () => console.log('2')
 // ], (e,r) => console.log(r) )
 
-function getFromFile(filename){
-    saveToFile()
+async function getFromFile(filename){
+    await saveToFile(filename)
     let data
     const numbers = []
     try{
@@ -41,13 +41,13 @@ function getFromFile(filename){
     return numbers
 }
 
-function saveToFile(){
-    const numbers = search()
+async function saveToFile(filename){
+    const numbers = await search(filename)
     if(!numbers) return 0
     fs.writeFileSync(filename,numbers.join('\n'))
 }
 
-function search(){
+async function search(filename){
     const range = []
     const numbers = []
     let data
@@ -57,13 +57,22 @@ function search(){
         console.log(e)
         return
     }
-    data.split('\n').forEach( a => a ? range.push(a.trim()) : '' )
-    if (range.length !==2) return 0
-    const start = parseInt(range[0])
-    const finish = parseInt(range[1])
-    for (let i=start; i<finish; i++){
-        let num = start+i
-        numbers.push(num.toString().padStart(10,'0'))
-    }
+    await Promise.all([
+        data.split('\n').forEach( a => a ? range.push(a.trim()) : '' ),
+    ])
+    if (range.length !== 2) return 0
+    let start = parseInt(range[0])-2,
+        finish = parseInt(range[1])-1
+
+    // for (let i=start; i<finish; i++){
+    //     let num = start+i
+    //     numbers.push(num.toString(10).padStart(10,'0'))
+    // }
+    while(start<finish) 
+        numbers.push((++start+1).toString().padStart(10,'0'))
+    // console.log(numbers.length)
+    // console.log(numbers)
+    // process.exit(1)
+
     return numbers
 }
