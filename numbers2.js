@@ -1,31 +1,7 @@
 const fs = require('fs')
-// const async = require('async')
-
-// let range = []
-// let numbers = []
-
 const filename = process.argv[2]
-getFromFile(filename)
 
-// async.series([
-//     () => fs.readFile(filename, 'utf8', (e,d) => {
-//         if(e) {
-//             console.log(e)
-//             return
-//         } else {
-//             d.split('\n').forEach( a => a ? range.push(a.trim()):'' )
-//         }
-//         const start = parseInt(range[0])
-//         const finish = parseInt(range[1])
-//         for (let i=start; i<finish; i++){
-//             let num = start+i
-//             numbers.push(num.toString().padStart(10,'0'))
-//         }
-//         console.log('1')
-//     }),
-//     () => module.exports = { numbers: numbers },
-//     () => console.log('2')
-// ], (e,r) => console.log(r) )
+getFromFile(filename)
 
 async function getFromFile(filename){
     await saveToFile(filename)
@@ -63,16 +39,7 @@ async function search(filename){
     if (range.length !== 2) return 0
     let start = parseInt(range[0])-2,
         finish = parseInt(range[1])-1
-
-    // for (let i=start; i<finish; i++){
-    //     let num = start+i
-    //     numbers.push(num.toString(10).padStart(10,'0'))
-    // }
     while(start<finish) 
         numbers.push((++start+1).toString().padStart(10,'0'))
-    // console.log(numbers.length)
-    // console.log(numbers)
-    // process.exit(1)
-
     return numbers
 }
