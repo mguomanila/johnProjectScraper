@@ -1,10 +1,10 @@
 require('dotenv-safe').config({sample:'.env'})
 const fs = require('fs')
-const path = require('path')
+const {resolve} = require('path')
 const express = require('express')
 const request = require('request')
 const puppeteer = require('puppeteer')
-const parsePdf = require('./pdf_parser1')
+const parsePdf = require('./pdf_parser2')
 const {mkdirSync,waitForFileExists,browse1,browse2,event,logger} = require('./utility')
 
 const app = express()
@@ -12,11 +12,13 @@ const {numbers} = require('./numbers1')
 
 const OUT_DIR1 = process.env.OUT_DIR1
 const OUT_DIR2 = process.env.OUT_DIR2
-const DOWNLOAD_PATH1 = path.resolve(__dirname, OUT_DIR1)
-const DOWNLOAD_PATH2 = path.resolve(__dirname, OUT_DIR2)
+const DOWNLOAD_PATH1 = resolve(__dirname, OUT_DIR1)
+const DOWNLOAD_PATH2 = resolve(__dirname, OUT_DIR2)
 const URL = process.env.URL
 const local_url = process.env.local_url
 const timeout = process.env.timeout
+const parsePdf1 = parsePdf({path:DOWNLOAD_PATH1})
+const parsePdf2 = parsePdf({path:DOWNLOAD_PATH2})
 
 mkdirSync([OUT_DIR1,OUT_DIR2])
   
@@ -71,38 +73,25 @@ async function crawl2(browser, page){
         dumpio: true
     })
     
-    let token = '', tokens = []
+    let token = ''
     const root = {url: URL}
-    let interval_id
-    let counter = 0
 
-    event.on('tokens1', async(token,n)=>{
-        await Promise.all([
-            root.token = token,
-            root.number = n,
-            event.emit('numbers', numbers)
-        ])
+    event.on('tokens', async(token,n,count)=>{
+        root.token = token
+        root.number = n
+        if(!count) event.emit('numbers', numbers)
         try{
-            await crawl1(browser, root)
-        }catch(e){
-            logger.write2(e)
-            event.emit('clearInterval')
-            event.emit('finished')
-        }  
-    })
-    event.on('tokens2', async(token,n)=>{
-        await Promise.all([
-            root.token = token,
-            root.number = n
-        ])
-        try{
-            await crawl2(browser, root)
+            if(!count)
+                await crawl1(browser, root)
+            else 
+                await crawl2(browser, root)
         }catch(e){
             logger.write2(e)
             event.emit('clearInterval', intervalId)
             event.emit('finished')
         }  
     })
+
     let count=0
     let number
     var intervalId = setInterval( () => {
@@ -110,10 +99,10 @@ async function crawl2(browser, page){
             token = JSON.parse(b)['token']
             if(!!token && !count) {
                 number = numbers.pop()
-                event.emit('tokens1',token, number)
+                event.emit('tokens',token, number, count)
                 count++
             }else if(!!token && !!count){
-                event.emit('tokens2',token, number)
+                event.emit('tokens',token, number, count)
                 count=0
             }
         })

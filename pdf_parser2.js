@@ -60,7 +60,7 @@ module.exports = function(init){
         let text = ''
         const t = 1e3
         await new Promise( resolve => {
-            pdfReader.parseFileItems(file, (e,item)=>{
+            pdfReader.parseFileItems(OUT_DIR+'/'+file, (e,item)=>{
                 if(item && item.text){
                     text += text 
                         ? item.text + '\n'
@@ -87,10 +87,10 @@ module.exports = function(init){
                 if(col1.includes('*****')) return
                 col2 = col2[0][1].replace(/[\r\n\d]+/g,'').trim()
                 col3 = col3[0][1]
-                if(col3.includes('-------')) return
+                if(col3.includes('------')) return
                 col4 = col3.substring(0,6)
             } catch(e){
-                lwriter.write('\n\n==parser==\n'+a+'\n','utf8')
+                lwriter.write('\n\n==parser==\n'+a+'\n'+e+'\n','utf8')
                 return
             }
             records.push({
