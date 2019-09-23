@@ -6,7 +6,7 @@ const fs = require('fs')
 const filename = './search.txt'
 
 exports = module.exports = {
-    numbers: getFromFile()
+    numbers: getFromFile(filename)
 }
 
 exports.modifyFile = function(n){
@@ -16,7 +16,7 @@ exports.modifyFile = function(n){
     })
 }
 
-function getFromFile(){
+function getFromFile(filename){
     saveToFile()
     let data
     const numbers = []
