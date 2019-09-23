@@ -8,7 +8,8 @@ const parsePdf = require('./pdf_parser2')
 const {mkdirSync,waitForFileExists,browse1,browse2,event,logger} = require('./utility')
 
 const app = express()
-const {numbers} = require('./numbers1')
+const search = process.env.search + '.txt'
+const numbers = require('./numbers1')(search)
 
 const OUT_DIR1 = process.env.OUT_DIR1
 const OUT_DIR2 = process.env.OUT_DIR2
@@ -79,7 +80,7 @@ async function crawl2(browser, page){
     event.on('tokens', async(token,n,count)=>{
         root.token = token
         root.number = n
-        if(!count) event.emit('numbers', numbers)
+        if(!count) event.emit('numbers', numbers, search)
         try{
             if(!count)
                 await crawl1(browser, root)

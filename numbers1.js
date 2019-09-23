@@ -3,13 +3,11 @@ const fs = require('fs')
 // const emitter = new EventEmitter()
 // let range = []
 // let numbers = []
-const filename = './search.txt'
+// const filename = './search.txt'
 
-exports = module.exports = {
-    numbers: getFromFile(filename)
-}
+exports = module.exports =  getFromFile
 
-exports.modifyFile = function(n){
+exports.modifyFile = function(n, filename){
     fs.writeFile(filename,n.join('\n'), e => {
         if(e) throw e
         console.log('search file modified')
@@ -17,7 +15,7 @@ exports.modifyFile = function(n){
 }
 
 function getFromFile(filename){
-    saveToFile()
+    saveToFile(filename)
     let data
     const numbers = []
     try{
@@ -30,13 +28,13 @@ function getFromFile(filename){
     return numbers
 }
 
-function saveToFile(){
-    const numbers = search()
+function saveToFile(filename){
+    const numbers = search(filename)
     if(!numbers) return 0
     fs.writeFileSync(filename,numbers.join('\n'))
 }
 
-function search(){
+function search(filename){
     const range = []
     const numbers = []
     let data

@@ -292,8 +292,8 @@ function Event(){
         if(e) console.log('an error occured',e)
         browser.close()
     })
-    event.on('numbers', n => {
-        modifyNumbers(n)
+    event.on('numbers', (n,f) => {
+        modifyNumbers(f,n)
     })
     event.on('clearInterval', id => {
         clearInterval(id)
