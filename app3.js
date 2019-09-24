@@ -67,9 +67,11 @@ async function crawl2(browser, page){
 
     const browser = await puppeteer.launch({
         // headless: false,
-        args: ['--enable-logging', '--disable-gpu ', '--disable-software-rasterizer', 
+        args: [
+            // '--enable-logging', 
+        '--disable-gpu ', '--disable-software-rasterizer', 
         //'--disable-web-security', 
-        '--user-data-dir=./chrome'
+        // '--user-data-dir=./chrome'
     ],
         dumpio: true
     })
