@@ -1,9 +1,7 @@
 const fs = require('fs')
 
-
 exports = module.exports =  getFromFile
-
-exports.modifyFile = function(n, filename){
+exports.modifyFile = function(filename, n){
     fs.writeFile(filename,n.join('\n'), e => {
         if(e) throw e
         console.log('search file modified')

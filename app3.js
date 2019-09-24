@@ -9,7 +9,7 @@ const {mkdirSync,waitForFileExists,browse1,browse2,event,logger} = require('./ut
 
 const app = express()
 const search = process.env.search + '.txt'
-const numbers = require('./numbers1')(search)
+let numbers = require('./numbers1')(search)
 
 const OUT_DIR1 = process.env.OUT_DIR1
 const OUT_DIR2 = process.env.OUT_DIR2
@@ -76,6 +76,7 @@ async function crawl2(browser, page){
     
     let token = ''
     const root = {url: URL}
+    numbers = await numbers
 
     event.on('tokens', async(token,n,count)=>{
         root.token = token
