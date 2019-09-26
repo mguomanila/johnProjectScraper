@@ -67,7 +67,7 @@ module.exports = function(init){
                         : item.text
                 }
             })
-            setTimeout( () => resolve(), t*1 )
+            setTimeout( () => resolve(), t*3 )
         })
     
         const pattern_col1 = /imiona[\d\n-]*([a-zAaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż\*]*)\s?/gi

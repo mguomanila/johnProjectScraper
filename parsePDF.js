@@ -13,11 +13,13 @@ const folder = process.argv[2] //
 const pdfParser = PdfParser({path:folder})
 
 fs.readdir(folder, (e,files)=>{
-    files.forEach( f => {
+    files.forEach( async (f) => {
         if(f.includes('pdf')){
-            console.log(`${folder}/${f}`)
-            pdfParser(f)
-            // console.log(f)
+            // todo: make this slower?
+            await new Promise( resolve => {
+                pdfParser(f)
+                // setTimeout( () => resolve(), 2e3)
+            })
         }
     })
 })

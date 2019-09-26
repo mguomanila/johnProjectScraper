@@ -58,7 +58,7 @@ const csv_writer = function(csv_file){
 // pdfParser.load(file)
 module.exports = function(init){
 
-    const OUT_DIR = pdfParser.OUT_DIR = init.file
+    const OUT_DIR = pdfParser.OUT_DIR = init.path
     const cwriter = csv_writer(`${OUT_DIR}/test.csv`)
     const lwriter = log_writer(`${OUT_DIR}/log.txt`)
 
