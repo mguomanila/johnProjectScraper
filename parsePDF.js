@@ -8,18 +8,20 @@ const DOWNLOAD_PATH1 = resolve(__dirname, OUT_DIR1)
 const DOWNLOAD_PATH2 = resolve(__dirname, OUT_DIR2)
 
 const PdfParser = require('./pdf_parser2')
-
 const folder = process.argv[2] //
-const pdfParser = PdfParser({path:folder})
+;(async () => {
+    const pdfParser = await PdfParser({path:folder})
 
-fs.readdir(folder, (e,files)=>{
-    files.forEach( async (f) => {
-        if(f.includes('pdf')){
-            // todo: make this slower?
-            await new Promise( resolve => {
-                pdfParser(f)
-                // setTimeout( () => resolve(), 2e3)
-            })
-        }
+    fs.readdir(folder, (e,files)=>{
+        files.forEach( async (f) => {
+            if(f.includes('pdf')){
+                // todo: make this slower?
+                await new Promise( async(resolve) => {
+                    await pdfParser(f)
+                    // setTimeout( () => resolve(), 2e3)
+                    resolve()
+                })
+            }
+        })
     })
-})
+})()
