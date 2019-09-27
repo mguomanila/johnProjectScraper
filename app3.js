@@ -4,7 +4,6 @@ const {resolve} = require('path')
 const express = require('express')
 const request = require('request')
 const puppeteer = require('puppeteer')
-const parsePdf = require('./pdf_parser2')
 const {mkdirSync,waitForFileExists,browse1,browse2,event,logger} = require('./utility')
 
 const app = express()
@@ -18,8 +17,6 @@ const DOWNLOAD_PATH2 = resolve(__dirname, OUT_DIR2)
 const URL = process.env.URL
 const local_url = process.env.local_url
 const timeout = process.env.timeout
-const parsePdf1 = parsePdf({path:DOWNLOAD_PATH1})
-const parsePdf2 = parsePdf({path:DOWNLOAD_PATH2})
 
 mkdirSync([OUT_DIR1,OUT_DIR2])
   
@@ -69,9 +66,11 @@ async function crawl2(browser, page){
         // headless: false,
         args: [
             // '--enable-logging', 
-        '--disable-gpu ', '--disable-software-rasterizer', 
-        //'--disable-web-security', 
-        // '--user-data-dir=./chrome'
+            `--proxy-server="https://${proxy-ip}:${proxy-port}"`,
+            '--disable-gpu ', 
+            '--disable-software-rasterizer', 
+            //'--disable-web-security', 
+            // '--user-data-dir=./chrome'
     ],
         dumpio: true
     })

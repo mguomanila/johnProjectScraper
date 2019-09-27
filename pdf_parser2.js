@@ -17,31 +17,26 @@ const log_writer = function(log_file){
     })
 }
 
-let csvWriter
-
 const csv_writer = async function(csv_file){
-    if(!fs.existsSync(csv_file)){
+    const file_exists = fs.existsSync(csv_file)
+    let csvWriter
+    const flags = {
+        encoding: 'utf8',
+        fd: null,
+        mode: 0o666,
+        autoClose: true
+    }
+    if(!file_exists){
+        flags.flags = 'w+'
         await new Promise( resolve => {
             setTimeout( () => resolve(), 1e3)
-            csvWriter = fs.createWriteStream(csv_file,{
-                flags: 'w+',
-                encoding: 'utf8',
-                fd: null,
-                mode: 0o666,
-                autoClose: true
-            })
+            csvWriter = fs.createWriteStream(csv_file,flags)
         })
         csvWriter.write(`Imiona, Nazwisko, Numer PESEL, Date of Born\n`)
     }else {
         await new Promise( resolve => {
             setTimeout( () => resolve(), 1e3)
-            csvWriter = fs.createWriteStream(csv_file,{
-                flags: 'a+',
-                encoding: 'utf8',
-                fd: null,
-                mode: 0o666,
-                autoClose: true
-            })
+            csvWriter = fs.createWriteStream(csv_file,flags)
         })
     }
     csvWriter.writeRecords = async (records)=>{
