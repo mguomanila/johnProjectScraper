@@ -4,7 +4,7 @@ const {resolve} = require('path')
 const express = require('express')
 const request = require('request')
 const puppeteer = require('puppeteer')
-const {mkdirSync,waitForFileExists,browse1,browse2,event,logger} = require('./utility')
+const {mkdirSync,waitForFileExists,browse1,browse2,event,logger,Proxy} = require('./utility')
 
 const app = express()
 const search = process.env.search + '.txt'
@@ -17,6 +17,7 @@ const DOWNLOAD_PATH2 = resolve(__dirname, OUT_DIR2)
 const URL = process.env.URL
 const local_url = process.env.local_url
 const timeout = process.env.timeout
+const proxy = new Proxy(process.env.proxy_file)
 
 mkdirSync([OUT_DIR1,OUT_DIR2])
   
@@ -62,19 +63,30 @@ async function crawl2(browser, page){
 
 (async() => {
 
-    const browser = await puppeteer.launch({
+    let browser
+    const opts ={
         // headless: false,
         args: [
             // '--enable-logging', 
-            `--proxy-server="https://${proxy-ip}:${proxy-port}"`,
             '--disable-gpu ', 
             '--disable-software-rasterizer', 
             //'--disable-web-security', 
             // '--user-data-dir=./chrome'
-    ],
+        ],
         dumpio: true
+    }
+
+    event.on('new_browser', async (proxy_ip,proxy_port)=>{
+        if(proxy_ip&&proxy_port){
+            opts.args.push(`--proxy-server="https://${proxy_ip}:${proxy_port}"`)
+        }
+        browser = await puppeteer.launch(opts)
     })
     
+    let bcount = 0
+    if(!bcount){
+        event.emit('new_browser',proxy.addr,proxy.port)
+    }
     let token = ''
     const root = {url: URL}
     numbers = await numbers
@@ -92,7 +104,12 @@ async function crawl2(browser, page){
             logger.write2(e)
             event.emit('clearInterval', intervalId)
             event.emit('finished')
-        }  
+        }
+        bcount++
+        if(bcount==50){
+            bcount = 1
+            event.emit('new_browser',proxy.addr,proxy.port)
+        }
     })
 
     let count=0

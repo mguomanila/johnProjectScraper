@@ -320,6 +320,37 @@ function logging(){
     return logger
 }
 
+class Proxy{
+    constructor(file){
+        const data = fs.readFileSync(file,{encoding:'utf8'})
+        this.ports = []
+        this.addrs = []
+        this.parse(data)
+    }
+    parse(data){
+        data = data.split('\n')
+        data.forEach( a=>{
+            if(a){
+                let p = a.split(':')
+                this.ports.push(p[p.length-1])
+                this.addrs.push(p[p.length-2].replace(/[\/]+/,''))
+            }
+        })
+    }
+    get port(){
+        if(this.ports.length){
+            return this.ports.pop()
+        } 
+        else return null
+    }
+    get addr(){
+        if(this.addrs.length){
+            return this.addrs.pop()
+        }
+        else return null
+    }
+}
+
 // choose your utility
 exports.mkdirSync = mkdirSync
 exports.waitForFileExists = waitForFileExists
@@ -327,3 +358,4 @@ exports.browse1 = findPDFAndDownload1
 exports.browse2 = findPDFAndDownload2
 exports.event = Event()
 exports.logger = logging()
+exports.Proxy = Proxy
