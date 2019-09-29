@@ -2,7 +2,7 @@ const fs = require('fs')
 const {PdfReader} = require('pdfreader')
 
 const pdfReader = new PdfReader()
-let {event} = require('./utility')
+let {event,convertDate} = require('./utility')
 
 const log_writer = function(log_file){
     if(!fs.existsSync(log_file)){
@@ -82,18 +82,6 @@ const csv_writer = async function(csv_file){
         return temp
     }
     return csvWriter
-}
-
-function convertDate(date){
-    let [y,m,d] = [date[0]+date[1],date[2]+date[3],date[4]+date[5]]
-    if (m-20>0) {
-        m = (m-20).toString().padStart(2,'0')
-        y = `20${y}`
-    } else {
-        y = `19${y}`
-    }
-    d = d.toString().padStart(2,'0')
-    return `${d}-${m}-${y}`
 }
 
 module.exports = async function(init){

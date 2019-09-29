@@ -351,6 +351,19 @@ class Proxy{
     }
 }
 
+function convertDate(date){
+    let [y,m,d] = [date[0]+date[1],date[2]+date[3],date[4]+date[5]]
+    if (m-20>0) {
+        m = (m-20).toString().padStart(2,'0')
+        y = `20${y}`
+    } else {
+        y = `19${y}`
+    }
+    d = d.toString().padStart(2,'0')
+    return `${d}-${m}-${y}`
+}
+
+
 // choose your utility
 exports.mkdirSync = mkdirSync
 exports.waitForFileExists = waitForFileExists
@@ -359,3 +372,4 @@ exports.browse2 = findPDFAndDownload2
 exports.event = Event()
 exports.logger = logging()
 exports.Proxy = Proxy
+exports.convertDate = convertDate
