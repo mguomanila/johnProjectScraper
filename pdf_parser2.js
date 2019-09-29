@@ -84,6 +84,18 @@ const csv_writer = async function(csv_file){
     return csvWriter
 }
 
+function convertDate(date){
+    let [y,m,d] = [date[0]+date[1],date[2]+date[3],date[4]+date[5]]
+    if (m-20>0) {
+        m = (m-20).toString().padStart(2,'0')
+        y = `20${y}`
+    } else {
+        y = `19${y}`
+    }
+    d = d.toString().padStart(2,'0')
+    return `${d}-${m}-${y}`
+}
+
 module.exports = async function(init){
     const OUT_DIR = init.path
     cwriter = await csv_writer(`${OUT_DIR}/test.csv`)
@@ -131,7 +143,7 @@ module.exports = async function(init){
                         col3 = col3[0][1]
                     }
                     if(col3.includes('------')) return
-                    col4 = col3.substring(0,6)
+                    col4 = convertDate(col3.substring(0,6))
                 } catch(e){
                     lwriter.write('\n\n==parser==\n'+a+'\n'+e+'\n','utf8')
                     return
